@@ -15,7 +15,7 @@ public class CardButton extends JButton{
         super();
         this.p = p;
         if(p.toString().startsWith("_"))
-            this.setText(p.toString().substring(1, 3));
+            this.setText(p.toString().substring(1, p.toString().length()));
         else
             this.setText(p+"");
     }
