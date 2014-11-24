@@ -1,6 +1,7 @@
 package view;
 
 import card.Play;
+import java.awt.Color;
 import javax.swing.JButton;
 
 public class CardButton extends JButton{
@@ -18,5 +19,14 @@ public class CardButton extends JButton{
             this.setText(p.toString().substring(1, p.toString().length()));
         else
             this.setText(p+"");
+        if(p.toString().charAt(p.toString().length()-1) == 's')
+            this.setBackground(Color.GREEN);
+            else if (p.toString().charAt(p.toString().length()-1) == 'o')
+                this.setBackground(Color.red);
+                    else
+                       this.setBackground(Color.cyan);
+                
+            
+        
     }
 }
