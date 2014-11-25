@@ -28,7 +28,7 @@ public class MainWindow extends JFrame {
     
     public MainWindow() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(100, 100, 688, 566);
+        setBounds(100, 100, 1277, 566);
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
@@ -77,6 +77,7 @@ public class MainWindow extends JFrame {
                 changeRange();
             }
         });
+        sliderRange.setValue(0);
         GridBagConstraints gbc_slider = new GridBagConstraints();
         gbc_slider.fill = GridBagConstraints.HORIZONTAL;
         gbc_slider.gridx = 0;
@@ -116,9 +117,17 @@ public class MainWindow extends JFrame {
 
     private void createButtons() {
         cardButtons=new CardButton[13][13];
+        int i = 0,j=0;
+        
         for (Play p: Play.values()) {
-                this.panelButtons.add(new CardButton(p));
-          
+                CardButton button = new CardButton(p,textField);
+                this.panelButtons.add(button);
+                this.cardButtons[i][j]=button;
+                i++;
+                if(i==13){
+                    i=0;
+                    j++;
+                }
         }
     }
 
