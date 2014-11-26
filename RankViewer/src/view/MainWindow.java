@@ -1,9 +1,6 @@
 package view;
 
 import card.Play;
-import card.Suit;
-import card.Value;
-import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -134,5 +131,162 @@ public class MainWindow extends JFrame {
     protected void changeRange() {
         this.labelRange.setText("Rango: " + this.sliderRange.getValue() + "%");
     }
+    
+    
+    /*
+    Dado un string marca los botones representados en el.
+    Si un boton está representado un numero par de veces, aparecera como NO MARCADO
+    */
+    private void activateButtons(String s){
+        
+        String[] pl = s.split(",");
+        String[] bt;
+        int x = 0;
+        int y = 0;
+        
+        for(int i = 0; i < pl.length; i++){
+            
+            bt = pl[i].split("");
+            int t= bt.length;
+            if(bt.length == 3 && bt[1].equals(bt[2])){
+                
+                activateEquals(bt);
+            }
+            else if(bt.length == 4 && bt[3].equals("+")){
+                
+                activateEqualsPlus(bt);
+            }
+            else if(bt.length == 4 && (bt[3].equalsIgnoreCase("o") || bt[3].equalsIgnoreCase("s"))){
+                
+                activateDif(bt);
+            }
+            else if(bt.length == 5 && bt[4].equals("+")){
+                
+                activatePlus(bt);
+            }
+            else if(bt.length == 8){
+                
+                activateInterval(bt);
+            }
 
+        }
+    }
+    
+    private int activateEquals(String[] bt){
+        
+        int i = index(bt[1]);
+        this.cardButtons[i][i].activate();
+          
+        return i;
+    }
+    
+    private void activateEqualsPlus(String[] bt){
+        
+        int x = activateEquals(bt);
+        
+        for(int i = x - 1; i >= 0; i--){
+            
+            this.cardButtons[i][i].activate();
+        }
+    }
+    
+    private int[] activateDif(String[] bt){
+        
+        int[] pos = new int[2];
+        
+        int i = index(bt[1]);
+        int j = index(bt[2]);
+              
+        if(bt[3].equalsIgnoreCase("o")){
+            
+            this.cardButtons[i][j].activate();
+        }
+        else if(bt[3].equalsIgnoreCase("s")){
+            
+            this.cardButtons[j][i].activate();
+        }
+        
+        pos[0] = i;
+        pos[1] = j;
+        
+        return pos;
+    }
+    
+    private void activatePlus(String[] bt){
+        
+        int[] pos = activateDif(bt);
+        pos[1]--;
+        
+        if(bt[3].equalsIgnoreCase("o")){
+            
+            while(pos[1] != pos[0]){
+                
+                this.cardButtons[pos[0]][pos[1]].activate();
+                pos[1]--;
+            }
+        }
+        else {
+                   
+            while(pos[1] != pos[0]){
+                
+                this.cardButtons[pos[1]][pos[0]].activate();
+                pos[1]--;
+            }
+        }
+        
+    }
+    
+    private void activateInterval(String[] bt){
+        
+        int a2 = index(bt[2]);
+        int b1 = index(bt[5]);
+        int b2 = index(bt[6]);
+        
+        if(bt[3].equalsIgnoreCase("o")){
+            
+            while(a2 <= b2){
+                
+                this.cardButtons[b1][b2].activate();
+                b2--;
+            }
+        }
+        else {
+                   
+            while(a2 <= b2){
+                
+                this.cardButtons[b2][b1].activate();
+                b2--;
+            }
+        }
+    }
+    
+    private int index(String s){
+               
+        int i;
+        int x;
+        
+        switch (s) {
+            case "A":
+                i = 0;
+                break;
+            case "K":
+                i = 1;
+                break;
+            case "Q":
+                i = 2;
+                break;
+            case "J":
+                i = 3;
+                break;
+            case "T":
+                i = 4;
+                break;
+            default:
+                x = Integer.parseInt(s);
+                i = 14 - x;
+                break;
+        }
+        
+        return i;
+    }
 }
