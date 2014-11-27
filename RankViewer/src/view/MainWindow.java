@@ -5,6 +5,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -13,6 +15,7 @@ import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import rankMatrix.RankMatrix;
 
 public class MainWindow extends JFrame {
 
@@ -22,7 +25,9 @@ public class MainWindow extends JFrame {
     private JSlider sliderRange;
     private JPanel panelButtons;
     private CardButton[][] cardButtons;
-    
+    public boolean isClickActive = false;
+    private RankMatrix rankMatrix = new RankMatrix();
+
     public MainWindow() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 1277, 566);
@@ -74,7 +79,7 @@ public class MainWindow extends JFrame {
                 changeRange();
             }
         });
-        sliderRange.setValue(0);
+        
         GridBagConstraints gbc_slider = new GridBagConstraints();
         gbc_slider.fill = GridBagConstraints.HORIZONTAL;
         gbc_slider.gridx = 0;
@@ -108,163 +113,204 @@ public class MainWindow extends JFrame {
         gbc_textField.gridy = 1;
         panel_1.add(textField, gbc_textField);
         textField.setColumns(10);
-
+        textField.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent evt) {
+                if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+                    showButtons();
+                }
+            }
+        });
         createButtons();
+        rankMatrix.parse();
+        sliderRange.setValue(0);
     }
 
     private void createButtons() {
-        cardButtons=new CardButton[13][13];
-        int i = 0,j=0;
-        
-        for (Play p: Play.values()) {
-                CardButton button = new CardButton(p,textField);
-                this.panelButtons.add(button);
-                this.cardButtons[i][j]=button;
-                i++;
-                if(i==13){
-                    i=0;
-                    j++;
-                }
+        cardButtons = new CardButton[13][13];
+        int i = 0, j = 0;
+
+        for (Play p : Play.values()) {
+            CardButton button = new CardButton(p, textField, this);
+            this.panelButtons.add(button);
+            this.cardButtons[i][j] = button;
+            i++;
+            if (i == 13) {
+                i = 0;
+                j++;
+            }
         }
+    }
+
+    public void setIsClickActive(boolean isClickActive) {
+        this.isClickActive = isClickActive;
+    }
+
+    public boolean isIsClickActive() {
+        return isClickActive;
+    }
+
+    public void deactivateAllButtons() {
+        for (int i = 0; i < cardButtons.length; i++) {
+            for (int j = 0; j < cardButtons[0].length; j++) {
+                cardButtons[i][j].deactivate();
+            }
+        }
+    }
+
+    private void showButtons() {
+        deactivateAllButtons();
+        setIsClickActive(false);
+        activateButtons(textField.getText());
     }
 
     protected void changeRange() {
         this.labelRange.setText("Rango: " + this.sliderRange.getValue() + "%");
-    }
-    
-    
-    /*
-    Dado un string marca los botones representados en el.
-    Si un boton está representado un numero par de veces, aparecera como NO MARCADO
-    */
-    private void activateButtons(String s){
+        this.textField.setText("");
+        this.deactivateAllButtons();
+        this.setIsClickActive(true);
+        Play[] selectedPlays=this.rankMatrix.perc(this.sliderRange.getValue());
         
+        for(Play p:selectedPlays){
+            activateButton(p);
+        }
+    }
+
+    private void activateButton(Play p) {
+        for (int i = 0; i < cardButtons.length; i++) {
+            for (int j = 0; j < cardButtons[0].length; j++) {
+                if(cardButtons[i][j].getPlay()==p){
+                cardButtons[i][j].click();
+                return;
+                }
+            }
+        }
+    }
+
+    /*
+     Dado un string marca los botones representados en el.
+     Si un boton está representado un numero par de veces, aparecera como NO MARCADO
+     */
+    private void activateButtons(String s) {
+
         String[] pl = s.split(",");
         String[] bt;
         int x = 0;
         int y = 0;
-        
-        for(int i = 0; i < pl.length; i++){
-            
+
+        for (int i = 0; i < pl.length; i++) {
+
             bt = pl[i].split("");
-            int t= bt.length;
-            if(bt.length == 3 && bt[1].equals(bt[2])){
-                
+            int t = bt.length;
+            if (bt.length == 3 && bt[1].equals(bt[2])) {
+
                 activateEquals(bt);
-            }
-            else if(bt.length == 4 && bt[3].equals("+")){
-                
+            } else if (bt.length == 4 && bt[3].equals("+")) {
+
                 activateEqualsPlus(bt);
-            }
-            else if(bt.length == 4 && (bt[3].equalsIgnoreCase("o") || bt[3].equalsIgnoreCase("s"))){
-                
+            } else if (bt.length == 4 && (bt[3].equalsIgnoreCase("o") || bt[3].equalsIgnoreCase("s"))) {
+
                 activateDif(bt);
-            }
-            else if(bt.length == 5 && bt[4].equals("+")){
-                
+            } else if (bt.length == 5 && bt[4].equals("+")) {
+
                 activatePlus(bt);
-            }
-            else if(bt.length == 8){
-                
+            } else if (bt.length == 8) {
+
                 activateInterval(bt);
             }
 
         }
     }
-    
-    private int activateEquals(String[] bt){
-        
+
+    private int activateEquals(String[] bt) {
+
         int i = index(bt[1]);
-        this.cardButtons[i][i].activate();
-          
+        this.cardButtons[i][i].setActive();
+
         return i;
     }
-    
-    private void activateEqualsPlus(String[] bt){
-        
+
+    private void activateEqualsPlus(String[] bt) {
+
         int x = activateEquals(bt);
-        
-        for(int i = x - 1; i >= 0; i--){
-            
-            this.cardButtons[i][i].activate();
+
+        for (int i = x - 1; i >= 0; i--) {
+
+            this.cardButtons[i][i].setActive();
         }
     }
-    
-    private int[] activateDif(String[] bt){
-        
+
+    private int[] activateDif(String[] bt) {
+
         int[] pos = new int[2];
-        
+
         int i = index(bt[1]);
         int j = index(bt[2]);
-              
-        if(bt[3].equalsIgnoreCase("o")){
-            
-            this.cardButtons[i][j].activate();
+
+        if (bt[3].equalsIgnoreCase("o")) {
+
+            this.cardButtons[i][j].setActive();
+        } else if (bt[3].equalsIgnoreCase("s")) {
+
+            this.cardButtons[j][i].setActive();
         }
-        else if(bt[3].equalsIgnoreCase("s")){
-            
-            this.cardButtons[j][i].activate();
-        }
-        
+
         pos[0] = i;
         pos[1] = j;
-        
+
         return pos;
     }
-    
-    private void activatePlus(String[] bt){
-        
+
+    private void activatePlus(String[] bt) {
+
         int[] pos = activateDif(bt);
         pos[1]--;
-        
-        if(bt[3].equalsIgnoreCase("o")){
-            
-            while(pos[1] != pos[0]){
-                
-                this.cardButtons[pos[0]][pos[1]].activate();
+
+        if (bt[3].equalsIgnoreCase("o")) {
+
+            while (pos[1] != pos[0]) {
+
+                this.cardButtons[pos[0]][pos[1]].setActive();
+                pos[1]--;
+            }
+        } else {
+
+            while (pos[1] != pos[0]) {
+
+                this.cardButtons[pos[1]][pos[0]].setActive();
                 pos[1]--;
             }
         }
-        else {
-                   
-            while(pos[1] != pos[0]){
-                
-                this.cardButtons[pos[1]][pos[0]].activate();
-                pos[1]--;
-            }
-        }
-        
+
     }
-    
-    private void activateInterval(String[] bt){
-        
+
+    private void activateInterval(String[] bt) {
+
         int a2 = index(bt[2]);
         int b1 = index(bt[5]);
         int b2 = index(bt[6]);
-        
-        if(bt[3].equalsIgnoreCase("o")){
-            
-            while(a2 <= b2){
-                
-                this.cardButtons[b1][b2].activate();
+
+        if (bt[3].equalsIgnoreCase("o")) {
+
+            while (a2 <= b2) {
+
+                this.cardButtons[b1][b2].setActive();
                 b2--;
             }
-        }
-        else {
-                   
-            while(a2 <= b2){
-                
-                this.cardButtons[b2][b1].activate();
+        } else {
+
+            while (a2 <= b2) {
+
+                this.cardButtons[b2][b1].setActive();
                 b2--;
             }
         }
     }
-    
-    private int index(String s){
-               
+
+    private int index(String s) {
+
         int i;
         int x;
-        
+
         switch (s) {
             case "A":
                 i = 0;
@@ -286,7 +332,7 @@ public class MainWindow extends JFrame {
                 i = 14 - x;
                 break;
         }
-        
+
         return i;
     }
 }
