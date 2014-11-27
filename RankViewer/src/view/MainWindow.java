@@ -9,12 +9,16 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import position.Action;
+import position.PositionCheck;
+import position.PossiblePositions;
 import rankMatrix.RankMatrix;
 
 public class MainWindow extends JFrame {
@@ -27,6 +31,7 @@ public class MainWindow extends JFrame {
     private CardButton[][] cardButtons;
     public boolean isClickActive = false;
     private RankMatrix rankMatrix = new RankMatrix();
+    private final JTextField textFieldPlay;
 
     public MainWindow() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -79,7 +84,7 @@ public class MainWindow extends JFrame {
                 changeRange();
             }
         });
-        
+
         GridBagConstraints gbc_slider = new GridBagConstraints();
         gbc_slider.fill = GridBagConstraints.HORIZONTAL;
         gbc_slider.gridx = 0;
@@ -120,6 +125,28 @@ public class MainWindow extends JFrame {
                 }
             }
         });
+        JLabel lblPlay = new JLabel("Comprobar Jugada:");
+        GridBagConstraints gbc_lblPlay = new GridBagConstraints();
+        gbc_lblPlay.insets = new Insets(0, 0, 5, 0);
+        gbc_lblPlay.gridx = 0;
+        gbc_lblPlay.gridy = 3;
+        panel_1.add(lblPlay, gbc_lblPlay);
+
+        textFieldPlay = new JTextField();
+        GridBagConstraints gbc_textFieldPlay = new GridBagConstraints();
+        gbc_textFieldPlay.fill = GridBagConstraints.HORIZONTAL;
+        gbc_textFieldPlay.gridx = 0;
+        gbc_textFieldPlay.gridy = 4;
+        panel_1.add(textFieldPlay, gbc_textFieldPlay);
+        textFieldPlay.setColumns(10);
+        textFieldPlay.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent evt) {
+                if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+                    checkPlay();
+                }
+            }
+        });
+
         createButtons();
         rankMatrix.parse();
         sliderRange.setValue(0);
@@ -168,9 +195,9 @@ public class MainWindow extends JFrame {
         this.textField.setText("");
         this.deactivateAllButtons();
         this.setIsClickActive(true);
-        Play[] selectedPlays=this.rankMatrix.perc(this.sliderRange.getValue());
-        
-        for(Play p:selectedPlays){
+        Play[] selectedPlays = this.rankMatrix.perc(this.sliderRange.getValue());
+
+        for (Play p : selectedPlays) {
             activateButton(p);
         }
     }
@@ -178,9 +205,9 @@ public class MainWindow extends JFrame {
     private void activateButton(Play p) {
         for (int i = 0; i < cardButtons.length; i++) {
             for (int j = 0; j < cardButtons[0].length; j++) {
-                if(cardButtons[i][j].getPlay()==p){
-                cardButtons[i][j].click();
-                return;
+                if (cardButtons[i][j].getPlay() == p) {
+                    cardButtons[i][j].click();
+                    return;
                 }
             }
         }
@@ -335,4 +362,61 @@ public class MainWindow extends JFrame {
 
         return i;
     }
+
+    private void checkPlay() {
+        Play p;
+        PossiblePositions pos;
+        Action action;
+        String text = textFieldPlay.getText();
+        String[] splitted = text.split(",");
+        if (splitted.length != 3) {
+            showMessage("Para comprobar jugada utiliza\nCARTAS,POSICION,ACCION\nPor Ejemplo:AA,UTG,OR");
+            return;
+        }
+        try {
+            try {
+                int aux = Integer.parseInt(splitted[0].substring(0, 1));
+                p = Play.valueOf("_" + splitted[0]);
+
+            } catch (NumberFormatException e) {
+                p = Play.valueOf(splitted[0]);
+            }
+
+        } catch (IllegalArgumentException e) {
+            showMessage("Error al parsear las cartas");
+            return;
+        }
+        try{
+            pos = PossiblePositions.valueOf(splitted[1]);
+        }catch (IllegalArgumentException e) {
+            showMessage("Error al parsear la posicion\nSon: UTG,MP,CO,BTN,SM,BB");
+            return;
+        }        
+        try{
+            action = Action.valueOf(splitted[2]);
+        }catch (IllegalArgumentException e) {
+            showMessage("Error al parsear la acción\nSon: fold,OR");
+            return;
+        }
+        
+        boolean raise=PositionCheck.checkPosition(p, pos, rankMatrix);
+        if(raise && action==Action.OR){
+            showMessage("La accion de: "+splitted[2]+"\nEn la posicion: "
+                        +splitted[1]+"\nCon la jugada: "+splitted[0]+"\nEs CORRECTA");
+        }
+        else if(!raise && action==Action.fold){
+            showMessage("La accion de: "+splitted[2]+"\nEn la posicion: "
+                        +splitted[1]+"\nCon la jugada: "+splitted[0]+"\nEs CORRECTA");
+        }
+        else{
+            showMessage("La accion de: "+splitted[2]+"\nEn la posicion: "
+                        +splitted[1]+"\nCon la jugada: "+splitted[0]+"\nEs INCORRECTA");
+        }
+    }
+
+    private void showMessage(String s) {
+        JOptionPane.showMessageDialog(this,
+                s);
+    }
+
 }
