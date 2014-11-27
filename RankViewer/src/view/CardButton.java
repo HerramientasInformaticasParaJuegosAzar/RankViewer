@@ -13,16 +13,18 @@ public class CardButton extends JButton {
     private boolean isSelected;
     private Color color;
     private JTextField textfield;
+    private MainWindow mw;
 
     public CardButton() {
         super();
 
     }
 
-    CardButton(Play p, JTextField textfield) {
+    CardButton(Play p, JTextField textfield,MainWindow mw) {
         super();
         isSelected = false;
         this.textfield = textfield;
+        this.mw=mw;
         this.p = p;
         if (p.toString().startsWith("_")) {
             this.setText(p.toString().substring(1, p.toString().length()));
@@ -50,7 +52,17 @@ public class CardButton extends JButton {
 
     }
 
-    private void click() {
+    public Play getPlay() {
+        return p;
+    }
+
+    
+    void click() {
+        if(!mw.isClickActive){
+            mw.deactivateAllButtons();
+            textfield.setText("");
+            mw.setIsClickActive(true);
+        }
         String carta = "";
         if (p.toString().startsWith("_")) {
             carta = p.toString().substring(1, p.toString().length());
@@ -80,5 +92,22 @@ public class CardButton extends JButton {
             
         }
 
+    }
+
+    void deactivate(){
+        this.isSelected = false;
+        this.setBackground(this.color);
+    }
+    
+    void setActive() {
+        if (this.isSelected) {
+            this.isSelected = false;
+            this.setBackground(this.color);
+            
+        }
+        else{
+            this.isSelected = true;
+            this.setBackground(new Color(221, 158, 255));            
+        }
     }
 }

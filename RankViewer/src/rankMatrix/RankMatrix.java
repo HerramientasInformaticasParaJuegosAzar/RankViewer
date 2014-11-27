@@ -44,15 +44,15 @@ public class RankMatrix {
         }
 
         public matrixCell() {
-            this.p=Play._98s;
-            this.cost=0.0;
+            this.p = Play._98s;
+            this.cost = 0.0;
         }
 
         @Override
-        public String toString(){
-            return this.p+"-"+this.cost;
+        public String toString() {
+            return this.p + "-" + this.cost;
         }
-        
+
     }
 
     private matrixCell[] cells;
@@ -76,21 +76,25 @@ public class RankMatrix {
         } else {
             int i = 0;
             for (Play play : Play.values()) {
-                Double d = Double.parseDouble(values[i]);
-                this.cells[i]=new matrixCell();
-                this.cells[i].setP(play);
-                this.cells[i].setCost(d);
+                if (play == Play.AA) {
+                    this.cells[i] = new matrixCell();
+                    this.cells[i].setP(Play.AA);
+                    this.cells[i].setCost(Double.MAX_VALUE);
+                } else {
+                    Double d = Double.parseDouble(values[i]);
+                    this.cells[i] = new matrixCell();
+                    this.cells[i].setP(play);
+                    this.cells[i].setCost(d);
+                }
                 i++;
+                
             }
             quickSort(cells, 0, 168);
-            System.out.println(Arrays.toString(cells));
+            
         }
     }
 
-    
-    
     /*http://www.programcreek.com/2012/11/quicksort-array-in-java/*/
-    
     public static void quickSort(matrixCell[] arr, int low, int high) {
 
         if (arr == null || arr.length == 0) {
@@ -108,18 +112,21 @@ public class RankMatrix {
         //make left < pivot and right > pivot
         int i = low, j = high;
         while (i <= j) {
-            while (arr[i].getCost() < pivot) {
+            while (arr[i].getCost() > pivot) {
                 i++;
             }
-
-            while (arr[j].getCost() > pivot) {
+            try{
+            while (arr[j].getCost() < pivot) {
                 j--;
+            }}
+            catch(Exception e){
+            System.out.println(low+" "+high+" "+ i + " "+ j);
             }
 
             if (i <= j) {
-                double temp = arr[i].getCost();
+                matrixCell temp = arr[i];
                 arr[i] = arr[j];
-                arr[j].setCost(temp);
+                arr[j]=temp;
                 i++;
                 j--;
             }
@@ -138,5 +145,15 @@ public class RankMatrix {
     public static void main(String[] args) {
         RankMatrix mat = new RankMatrix();
         mat.parse();
+        System.out.println(Arrays.toString(mat.perc(25)));
+    }
+    
+    public Play[] perc(int n){
+        int total = (int)(169*n)/100;
+        Play[] m = new Play[total];
+        for(int j = 0 ; j<total;j++){
+            m[j]=this.cells[j].getP();
+        }
+        return m;
     }
 }
